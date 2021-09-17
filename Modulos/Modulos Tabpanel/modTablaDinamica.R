@@ -1,20 +1,19 @@
-TablasAnexadas <- c("Carga Completa ICARO", "Estructura Completa ICARO")
+TablasAnexadas <- c("Carga Completa", "Estructura Completa")
 
 
 TablaDinamicaUI <- function(id) {
   
   ns <- NS(id)
   
-  ListaDeTablas <- c(TablasAnexadas, ListadoTablasBD("SIIF"), ListadoTablasBD("SSCC"),
-                     ListadoTablasBD("SGF"), ListadoTablasBD("SGO"))
+  con <- ConectarBD()
+  ListaDeTablas <- c(TablasAnexadas, dbListTables(con))
+  DesconectarBD(con)
   
   tabPanel("Tabla Dinamica",
            sidebarLayout(
              sidebarPanel(id = ns("Sidebar"),
                           p(style="text-align: center;",
                             strong("Tabla Dinámica personalizable")),
-                          
-                          br(),
                           
                           p(style="text-align: justify;",
                            "Primero, deberá elegir una de las tablas del siguiente listado.",
@@ -27,7 +26,7 @@ TablaDinamicaUI <- function(id) {
                           hr(style = "border-top: 1px solid #000000;"),
                           
                           selectizeInput(ns("Tabla"), "Selección de Tabla",
-                                         choices = ListaDeTablas, selected = "Carga Completa ICARO", multiple = F, 
+                                         choices = ListaDeTablas, selected = "Carga Completa", multiple = F, 
                                          options = list(placeholder = "Elegir una opción")),
                           
                           hr(style = "border-top: 1px solid #000000;"),
@@ -93,7 +92,7 @@ TablaDinamicaServer <- function(id) {
       
       if (input$Tabla %in% TablasAnexadas) {
         
-        if (input$Tabla == "Estructura Completa ICARO") {
+        if (input$Tabla == "Estructura Completa") {
           SQLstring <- paste0("SELECT P.Programa, P.DescProg, ",
                               "SP.Subprograma, SP.DescSubprog, ", 
                               "PY.Proyecto, PY.DescProy, ",
@@ -104,12 +103,12 @@ TablaDinamicaServer <- function(id) {
                               "INNER JOIN OBRAS O ON A.Actividad = O.Imputacion"
                               )
           
-          Ans <- FiltrarBD("ICARO", SQLstring)
+          Ans <- FiltrarBD(SQLstring)
           Ans <- Ans %>% 
             select(-Imputacion)
         }
         
-        if (input$Tabla == "Carga Completa ICARO") {
+        if (input$Tabla == "Carga Completa") {
           SQLstring <- paste0("SELECT P.Programa, P.DescProg, ",
                               "SP.Subprograma, SP.DescSubprog, ", 
                               "PY.Proyecto, PY.DescProy, ",
@@ -122,7 +121,7 @@ TablaDinamicaServer <- function(id) {
                               "INNER JOIN OBRAS O ON C.Obra = O.Descripcion"
           )
           
-          Ans <- FiltrarBD("ICARO", SQLstring)
+          Ans <- FiltrarBD(SQLstring)
           Ans <- Ans %>% 
             mutate(Fecha = zoo::as.Date(Fecha),
                    Ejercicio = year(Fecha),
@@ -134,8 +133,10 @@ TablaDinamicaServer <- function(id) {
         }
         
       } else {
-
-        Ans <- eval(call(paste0(input$Tabla, ".df")))
+        
+        SQLstring <- paste0("SELECT * FROM ",
+                            input$Tabla)
+        Ans <- FiltrarBD(SQLstring)
         
       }
       
@@ -145,7 +146,7 @@ TablaDinamicaServer <- function(id) {
     
     output$table = renderRpivotTable({
       rpivotTable(Tabla.df(),
-                  rendererName="Tabla Dinamica R INVICO",
+                  rendererName="Tabla Dinamica ICARO",
                   onRefresh = htmlwidgets::JS(paste0("function(config) {Shiny.onInputChange('", ns("myData"), "', 
                                             document.getElementById('", ns("table"),"').innerHTML); 
   }")))
@@ -159,9 +160,8 @@ TablaDinamicaServer <- function(id) {
     })
     
     output$GuardarXLSX <- downloadHandler(
-
       filename = function() {
-        paste("R INVICO TD-", Sys.Date(), ".xlsx", sep="")
+        paste("R Icaro TD-", Sys.Date(), ".xlsx", sep="")
       },
       content = function(file) {
         if(nrow(summarydf() )<1) return()
@@ -170,25 +170,23 @@ TablaDinamicaServer <- function(id) {
     )
     
     output$GuardarCSV <- downloadHandler(
-      
       filename = function() {
-        paste("R INVICO TD-", Sys.Date(), ".csv", sep="")
+        paste("R Icaro TD-", Sys.Date(), ".csv", sep="")
       },
       content = function(file) {
         if(nrow(summarydf() )<1) return()
-        openxlsx::write.xlsx(summarydf(), file)
+        write.csv(summarydf(), file)
       }
     )
     
     # observeEvent( input$GuardarXLSX, {
     #   if(nrow(summarydf() )<1) return()
-    #   
-    #   openxlsx::write.xlsx(summarydf(), paste0(DATA_PATH, "R Output/Tablas Dinamicas/R INVICO TD.xlsx"))
+    #   openxlsx::write.xlsx(summarydf(), paste0(DATA_PATH, "R Output/Tablas Dinamicas/Icaro TD.xlsx"))
     # })
     # 
     # observeEvent( input$GuardarCSV, {
     #   if(nrow(summarydf() )<1) return()
-    #   write_excel_csv(summarydf(), paste0(DATA_PATH, "R Output/Tablas Dinamicas/R INVICO TD.csv"))
+    #   write_excel_csv(summarydf(), paste0(DATA_PATH, "R Output/Tablas Dinamicas/Icaro TD.csv"))
     # })
     
   })

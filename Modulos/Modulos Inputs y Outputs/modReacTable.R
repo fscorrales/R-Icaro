@@ -10,8 +10,9 @@ ReacTableUI <- function(id) {
 ReacTableServer <- function(id, data, selection = "single", filterable = TRUE, 
                             defaultSortOrder = "asc", defaultSorted = NULL,
                             ListColDef = list(), height = 500, compact = FALSE,
-                            defaultColDef = NULL, wrap = FALSE, striped = TRUE,
-                            defaultPageSize = 10, pageSizeOptions = c(10, 25, 50, 100)) {
+                            defaultColDef = NULL, wrap = FALSE,
+                            defaultPageSize = 10, pageSizeOptions = c(10, 25, 50, 100),
+                            ListColGroups = list()) {
   
   stopifnot(is.reactive(data))
   
@@ -23,7 +24,7 @@ ReacTableServer <- function(id, data, selection = "single", filterable = TRUE,
                 showPageInfo = FALSE, showPageSizeOptions = TRUE, paginationType = "simple",
                 defaultPageSize = defaultPageSize, pageSizeOptions = pageSizeOptions,
                 resizable = TRUE,  fullWidth = TRUE, wrap = wrap, height = height,
-                columns = ListColDef, compact = compact,  striped = striped,
+                columns = ListColDef, columnGroups = ListColGroups, compact = compact, 
                 defaultSortOrder = defaultSortOrder, defaultSorted = defaultSorted,
                 defaultColDef = defaultColDef,
                 theme = reactableTheme(

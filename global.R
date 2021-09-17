@@ -43,10 +43,10 @@ library(DT)
 # library(shinypanels)
 
 list.files("Modulos/Modulos Inputs y Outputs") %>%
-  purrr::map(~ source(paste0("Modules/Modulos Inputs y Outputs/", .)))
+  purrr::map(~ source(paste0("Modulos/Modulos Inputs y Outputs/", .)))
 
 list.files("Modulos/Modulos Tabpanel") %>%
-  purrr::map(~ source(paste0("Modules/Modulos Tabpanel/", .)))
+  purrr::map(~ source(paste0("Modulos/Modulos Tabpanel/", .)))
 
 DATA_PATH <- str_remove(getwd(), "R Icaro")
 print(DATA_PATH)

@@ -42,14 +42,19 @@ library(DT)
 # library(tippy) #https://atomiks.github.io/tippyjs/#all-options
 # library(shinypanels)
 
+##INPUT & OUTOPUT PATH
+DATA_PATH <- str_split(getwd(), "/", simplify = T)
+DATA_PATH <- DATA_PATH[1:(length(DATA_PATH)-1)] %>% 
+  sapply(function(x) paste0(x, "/")) %>% 
+  paste(collapse = "")
+  # paste0("R Output")
+print(DATA_PATH)
+
 list.files("Modulos/Modulos Inputs y Outputs") %>%
   purrr::map(~ source(paste0("Modulos/Modulos Inputs y Outputs/", .)))
 
 list.files("Modulos/Modulos Tabpanel") %>%
   purrr::map(~ source(paste0("Modulos/Modulos Tabpanel/", .)))
-
-DATA_PATH <- str_remove(getwd(), "R Icaro")
-print(DATA_PATH)
 
 CargaIcaroTrigger <- makereactivetrigger()
 CargaIcaro.df <- reactive({

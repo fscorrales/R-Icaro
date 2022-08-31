@@ -318,6 +318,92 @@ ImportarCSV <- function(datapathCSV, Clasificacion){
     }
   }
   
+  if (Clasificacion == "RendicionFUNCSGF"){
+    TituloReporte <- BD$X2[1]
+    if (TituloReporte == "Resumen de Rendiciones (Detalle)") {
+      # suppressMessages(
+      #   db <- vroom::vroom(path, col_names = FALSE, delim = ",",
+      #                      col_types = vroom::cols(.default = "c"),
+      #                      locale = vroom::locale(encoding = 'ISO-8859-1'))
+      # )
+      # 
+      # origen_vec <- stringr::str_split(db$X7[1]," - ", simplify = T)[1]
+      # origen_vec <- stringr::str_split(origen_vec, " = ", simplify = T)[2]
+      # origen_vec <- stringr::str_remove_all(origen_vec, '\\"')
+      # 
+      # names_vec <- c("origen", "beneficiario", "cta_cte", "libramiento_sgf", "fecha",
+      #                "movimiento", "importe_neto", "gcias", "sellos", "iibb",
+      #                "suss", "invico", "otras", "importe_bruto", "destino",
+      #                "seguro", "salud", "mutual")
+      # 
+      # db_mod <- purrr::map_dfc(names_vec, stats::setNames,
+      #                          object = list(character()))
+      # 
+      # db <- db %>%
+      #   dplyr::mutate(origen = origen_vec)
+      # 
+      # if (origen_vec == "OBRAS") {
+      #   db <- db %>%
+      #     dplyr::select(-X1:-X23) %>%
+      #     dplyr::select(-X37:-X47) %>%
+      #     dplyr::rename(beneficiario = X24, cta_cte = X25,
+      #                   libramiento_sgf = X26, fecha = X27, movimiento = X28,
+      #                   importe_neto = X36, gcias = X30, sellos = X31,
+      #                   iibb = X32, suss = X33,
+      #                   invico = X34, otras = X35, importe_bruto = X29)
+      #   
+      # } else {
+      #   db <- db %>%
+      #     dplyr::select(-X1:-X26) %>%
+      #     dplyr::select(-X42:-X53) %>%
+      #     dplyr::rename(beneficiario = X27, destino = X28, cta_cte = X29,
+      #                   libramiento_sgf = X30, fecha = X31, movimiento = X32,
+      #                   importe_neto = X33, gcias = X34, sellos = X35,
+      #                   iibb = X36, suss = X37, seguro = X38,
+      #                   salud = X39, mutual = X40, importe_bruto = X41)
+      # }
+      # 
+      # db <- db_mod %>%
+      #   dplyr::full_join(db, by = colnames(db))
+      # 
+      # db <- db %>%
+      #   dplyr::select(.data$origen, dplyr::everything()) %>%
+      #   dplyr::mutate(fecha = lubridate::dmy(.data$fecha),
+      #                 ejercicio = as.character(lubridate::year(.data$fecha)),
+      #                 mes =  stringr::str_c(stringr::str_pad(lubridate::month(.data$fecha), 2, pad = "0"),
+      #                                       lubridate::year(.data$fecha), sep = "/"),
+      #                 movimiento = ifelse(.data$movimiento == "TRANSF.",
+      #                                     "DEBITO", .data$movimiento),
+      #                 cta_cte = ifelse(is.na(.data$cta_cte) & .data$beneficiario == "CREDITO ESPECIAL",
+      #                                  "130832-07", .data$cta_cte),
+      #                 cta_cte = ifelse(.data$cta_cte == "71-1-10270-5", "22110270-05",
+      #                                  .data$cta_cte)) %>%
+      #   dplyr::mutate_at(c("importe_neto", "gcias", "sellos", "iibb",
+      #                      "suss", "salud", "mutual", "importe_bruto",
+      #                      "invico", "otras", "seguro"),
+      #                    ~round(readr::parse_number(.), 2))
+      # 
+      # if (ExisteTablaBD("EPAM")) {
+      #   DatosDepurados <- FiltrarBD(
+      #     paste0("SELECT * FROM EPAM WHERE NroComprobanteSIIF <> ''")
+      #   )
+      #   DatosDepurados <- DatosDepurados %>% 
+      #     mutate(FechaPago = zoo::as.Date(FechaPago)) %>% 
+      #     bind_rows(BD)
+      # } else {
+      #   DatosDepurados <- BD
+      # }
+      # 
+      # DatosDepurados <- DatosDepurados %>% 
+      #   arrange(desc(TipoComprobanteSIIF), desc(NroComprobanteSIIF), 
+      #           Obra, Beneficiario, FechaPago)
+      # 
+      # AgregarRegistros("EPAM", DatosDepurados, overwrite = TRUE)
+      # # OrdenarTabla("EPAM", "Obra ASC, Beneficiario ASC, FechaPago ASC")
+      # EPAMIcaroSGFTrigger$trigger()
+      
+    }
+  }
   
   return(Ans)
   
@@ -952,8 +1038,9 @@ EliminarComprobanteICARO <- function(DatosComprobanteAEliminar){
   
   #Procedemos a eliminar el registro principal
   EjecutarBD(
-    "DELETE FROM CARGA WHERE Comprobante = ?",
-    params = ComprobanteEliminar
+    paste0("DELETE FROM CARGA ",
+           "WHERE Comprobante = '" , ComprobanteEliminar , "' ",
+           "AND Tipo = '" , TipoEliminar, "'")
   )
   CargaIcaroTrigger$trigger()
   
@@ -2213,6 +2300,7 @@ ValidarDescObraAutocarga <- function(DescObra, Origen = "Obras"){
     EsValido = FALSE,
     Descripcion =  ""
   )
+
   
   DescripcionObra <- unlist(DescObra, use.names = FALSE)
   data <- FiltrarBD(

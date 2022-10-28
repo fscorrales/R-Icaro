@@ -74,6 +74,7 @@ bsModalAutocargaServer <- function(id, toggleOpen, DatosOriginales) {
       if (Origen() == "Obras"){
         Leyendas$Titulo <- "Editar Registro Autocarga OBRAS"
         # Leyendas$BotonAceptar <- "Agregar"
+        shinyjs::disable("DescObraAutocarga")
       } else{
         Leyendas$Titulo <- "Editar Registro Autocarga EPAM"
         # Leyendas$BotonAceptar <- "Editar"
@@ -107,6 +108,27 @@ bsModalAutocargaServer <- function(id, toggleOpen, DatosOriginales) {
         DescCUITChoices <- c(DescCUIT(), DescCUITChoices)
       }
       
+      # DESCRIPCION OBRAS EPAM
+      if (Origen() == "Obras"){
+        DescripcionObraChoices <- DescripcionObra()
+      } else{
+        DescripcionObraChoices <- FiltrarBD(
+          "SELECT DISTINCT Descripcion FROM OBRAS"
+        )
+        
+        data <- DescripcionObraChoices %>%
+          filter(Descripcion == DescripcionObra())
+        Existe <- nrow(data) >= 1
+        
+        DescripcionObraChoices <- DescripcionObraChoices[["Descripcion"]]
+        
+        if (!Existe) {
+          DescripcionObraChoices <- c(DescripcionObra(), DescripcionObraChoices)
+        }
+      }
+
+      # # # # # #
+      
       updateSelectizeInput(session, inputId = ('DescCUITAutocarga'), choices = DescCUITChoices,
                            selected = DescCUIT(), server = TRUE)
       updateTextInput(session, "CUITAutocarga", value = NroCUIT())
@@ -115,9 +137,8 @@ bsModalAutocargaServer <- function(id, toggleOpen, DatosOriginales) {
                            selected = TotalRetenido(), server = TRUE)
       updateNumericInput(session, "ImporteNetoAutocarga", value = ImporteNeto())
       
-      updateSelectizeInput(session, inputId = ('DescObraAutocarga'), choices = DescripcionObra(),
+      updateSelectizeInput(session, inputId = ('DescObraAutocarga'), choices = DescripcionObraChoices,
                            selected = DescripcionObra(), server = TRUE)
-      shinyjs::disable("DescObraAutocarga")
 
     })
 

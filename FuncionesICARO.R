@@ -948,6 +948,10 @@ EditarAutocargaICARO <- function(DatosOriginales, DatosFormulario){
   OrigenOriginal <- unlist(DatosOriginales$Origen, use.names = FALSE)
   
   DescCUITNuevo <- unlist(Datos$DescCUITAutocarga, use.names = FALSE)
+  # En principio, solo para obras EPAM
+  DescObraNuevo <- unlist(Datos$DescObraAutocarga, use.names = FALSE)
+  # # # #
+  
   ImporteBrutoNuevo <- unlist(Datos$ImporteBrutoAutocarga, use.names = FALSE) %>% 
     as.numeric()
   TotalRetenidoNuevo <- unlist(Datos$TotalRetenidoAutocarga, use.names = FALSE) %>% 
@@ -993,15 +997,15 @@ EditarAutocargaICARO <- function(DatosOriginales, DatosFormulario){
     )
     if (TotalRetenidoNuevo == 0) {
       DatosDepurados[NroFilaEditar, 
-                     c("Beneficiario", "ImporteBruto", "IIBB",
+                     c("Beneficiario", "Obra", "ImporteBruto", "IIBB",
                        "TL", "SUSS", "Gcias", "Sellos",
-                       "ImporteNeto")] <- list(DescCUITNuevo, ImporteBrutoNuevo, 
+                       "ImporteNeto")] <- list(DescCUITNuevo, DescObraNuevo, ImporteBrutoNuevo, 
                                                0, 0, 0, 0, 0, ImporteNetoNuevo)
     } else {
       DatosDepurados[NroFilaEditar, 
-                     c("Beneficiario", "ImporteBruto",
-                       "ImporteNeto")] <- list(DescCUITNuevo, ImporteBrutoNuevo, 
-                                               ImporteNetoNuevo)
+                     c("Beneficiario", "Obra", "ImporteBruto",
+                       "ImporteNeto")] <- list(DescCUITNuevo, DescObraNuevo, 
+                                               ImporteBrutoNuevo, ImporteNetoNuevo)
     }
     
     DatosDepurados <- DatosDepurados %>% 

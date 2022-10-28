@@ -248,38 +248,90 @@ ImportarCSV <- function(datapathCSV, Clasificacion){
       Ans <- TRUE
       BD <- read_csv(datapathCSV, col_names = F, col_types = str_c(rep("c", 64), collapse = ""),
                      locale = locale(encoding = 'ISO-8859-1'))
-
-      BD <- BD %>% 
-        select(-one_of(str_c("X", 1:25))) %>% 
-        mutate(Obra = ifelse(is.na(X54), NA, X26))
       
-      BD <- BD %>%
-        transmute(NroComprobanteSIIF = "",
-                  TipoComprobanteSIIF = "",
-                  Origen = "EPAM",
-                  Obra = zoo::na.locf(Obra, na.rm = F),
-                  Obra = ifelse(!is.na(Obra), Obra, X39),
-                  Beneficiario = ifelse(is.na(X54), X26, X37),
-                  LibramientoSGF = ifelse(is.na(X54), X27, X38),
-                  Destino = ifelse(is.na(X54), X28, X39),
-                  FechaPago = ifelse(is.na(X54), X29, X40),
-                  Movimiento = ifelse(is.na(X54), X30, X41),
-                  ImporteNeto = ifelse(is.na(X54), X31, X42),
-                  Gcias = ifelse(is.na(X54), X32, X43),
-                  Sellos = ifelse(is.na(X54), X33, X44),
-                  TL = ifelse(is.na(X54), X34, X45),
-                  IIBB = ifelse(is.na(X54), X35, X46),
-                  SUSS = ifelse(is.na(X54), X36, X47),
-                  Seguro = ifelse(is.na(X54), X37, X48),
-                  Salud = ifelse(is.na(X54), X38, X49),
-                  Mutual = ifelse(is.na(X54), X39, X50),
-                  ImporteBruto = ifelse(is.na(X54), X40, X51)) %>% 
-        filter(!str_detect(Obra, "175-HONOR"))
+      origen_vec <- stringr::str_split(BD$X7[1]," - ", simplify = T)[1]
+      origen_vec <- stringr::str_split(origen_vec, " = ", simplify = T)[2]
+      origen_vec <- stringr::str_remove_all(origen_vec, '\\"')
+      
+      names_vec <- c("NroComprobanteSIIF", "TipoComprobanteSIIF",
+                     "Obra" ,"Origen", "Beneficiario", "LibramientoSGF", "Destino", "FechaPago",
+                     "Movimiento", "ImporteNeto", "Gcias", "Sellos", "TL","IIBB",
+                     "SUSS", "Seguro", "Salud", "Mutual", "ImporteBruto")
+      
+      db_mod <- purrr::map_dfc(names_vec, stats::setNames,
+                               object = list(character()))
+      if (origen_vec == "EPAM") {
+        
+        BD <- BD %>% 
+          select(-one_of(str_c("X", 1:25))) %>% 
+          mutate(Obra = ifelse(is.na(X54), NA, X26))
+        
+        BD <- BD %>%
+          transmute(NroComprobanteSIIF = "",
+                    TipoComprobanteSIIF = "",
+                    Origen = origen_vec,
+                    Obra = zoo::na.locf(Obra, na.rm = F),
+                    Obra = ifelse(!is.na(Obra), Obra, X39),
+                    Beneficiario = ifelse(is.na(X54), X26, X37),
+                    LibramientoSGF = ifelse(is.na(X54), X27, X38),
+                    Destino = ifelse(is.na(X54), X28, X39),
+                    FechaPago = ifelse(is.na(X54), X29, X40),
+                    Movimiento = ifelse(is.na(X54), X30, X41),
+                    ImporteNeto = ifelse(is.na(X54), X31, X42),
+                    Gcias = ifelse(is.na(X54), X32, X43),
+                    Sellos = ifelse(is.na(X54), X33, X44),
+                    TL = ifelse(is.na(X54), X34, X45),
+                    IIBB = ifelse(is.na(X54), X35, X46),
+                    SUSS = ifelse(is.na(X54), X36, X47),
+                    Seguro = ifelse(is.na(X54), X37, X48),
+                    Salud = ifelse(is.na(X54), X38, X49),
+                    Mutual = ifelse(is.na(X54), X39, X50),
+                    ImporteBruto = ifelse(is.na(X54), X40, X51)) %>% 
+          filter(!str_detect(Obra, "175-HONOR"))
+      } else{
+        
+        BD <- BD %>% 
+          select(-one_of(str_c("X", 1:25))) %>% 
+          utils::tail(-1) %>%
+          mutate(Obra = ifelse(is.na(X54), NA, X26))
+        
+        BD <- BD %>%
+          transmute(NroComprobanteSIIF = "",
+                    TipoComprobanteSIIF = "",
+                    Origen = origen_vec,
+                    Obra =  X28, #Igualamos a destino
+                    Beneficiario =X26,
+                    LibramientoSGF = X27,
+                    Destino = X28,
+                    FechaPago = X29,
+                    Movimiento = X30,
+                    ImporteNeto = X31,
+                    Gcias = X32,
+                    Sellos = X33,
+                    TL = X34,
+                    IIBB = X35,
+                    SUSS = X36,
+                    Seguro = X37,
+                    Salud = X38,
+                    Mutual = X39,
+                    ImporteBruto = X40) %>% 
+          #filter(!str_detect(Obra, "HONORARIOS")) %>% 
+          filter(!str_detect(Obra, "COMISIONES")) %>% 
+          filter(!str_detect(Obra, "ENTREGA DE CHEQUER"))
+        
+      }
+
+      BD <- db_mod %>%
+        dplyr::full_join(BD, by = colnames(BD))
       
       BD <- BD %>%
         mutate(FechaPago = dmy(FechaPago),
                Periodo = as.character(year(FechaPago)),
                ImporteNeto = parse_number(ImporteNeto),
+               #No me agrada del todo
+               Obra = ifelse(Obra == "0.00",
+                             Destino, Obra),
+               # ---
                Gcias = parse_number(Gcias),
                Sellos = parse_number(Sellos),
                Sellos = ifelse(is.na(Sellos), 0, Sellos),
